@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "986914028918",
+    "project_id": "rick-coins-ruhsari",
+    "storage_bucket": "rick-coins-ruhsari.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986914028918:android:cd1507bab4a6b4cdb60e57",
+        "android_client_info": {
+          "package_name": "com.example.rick_coins_market_ruhsari"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzK6ib8cPuTvvJx3hzePjDLLYA18b8YaE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
