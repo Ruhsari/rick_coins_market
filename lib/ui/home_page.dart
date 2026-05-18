@@ -10,8 +10,7 @@ import '../components/character_info_card.dart';
 import '../components/top_bar_widget.dart';
 import '../models/btn_cartoon_model.dart';
 import '../services/char_api_service.dart';
-import '../states/local_user_provider.dart';
-
+import '../providers/local_user_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,20 +19,13 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   FirebaseAuth auth = FirebaseAuth.instance;
   User? get currentUser => auth.currentUser;
 
-  int _selectedIndex = 0; // 0 - Home, 1 - Market, 2 - Cabinet и т.д.
+  final FirebaseFirestore _firestore_user_collection = FirebaseFirestore.instance;
 
-  final FirebaseFirestore _firesstor_user_collection = FirebaseFirestore
-      .instance
-      .collection('user_persons')
-      .firestore;
-
-  final List<BtnCartoonModel> cartoonList =
-  BtnCartoonModel.getListCartoonModels();
+  final List<BtnCartoonModel> cartoonList = BtnCartoonModel.getListCartoonModels();
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -85,16 +77,47 @@ class _HomePageState extends State<HomePage>
     final userProvider = context.watch<UserProvider>();
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 233, 233, 233),
+      // Единый светлый фон, как в маркете
+      backgroundColor: const Color(0xFFF4F7F9),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(), // Пружинящий скролл для всей страницы
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TopBarWidget(showLogoutButton: true),
-              _buildSearchBar(userProvider),
+
+              // Главный заголовок
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                child: Row(
+                  children: [
+                    const Text(
+                      "Explore Universe",
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF03045E), // Темно-синий
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text("🌌", style: TextStyle(fontSize: 24)),
+                  ],
+                ),
+              ),
+
+              _buildSearchBar(),
+
+              _buildSectionTitle("Popular Characters", "👾"),
               _buildListViewCharacters(),
+
+              _buildSectionTitle("Watch Channels", "📺"),
               showListCartoon(),
+
+              const SizedBox(height: 10),
               _buildEarnCard(),
+              const SizedBox(height: 30), // Отступ снизу
             ],
           ),
         ),
@@ -102,42 +125,55 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // Widget _buildSearchBar(UserProvider userProvider) {
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-  //     child: TextField(
-  //       controller: _searchController,
-  //       onChanged: _filterCharacters,
-  //       decoration: InputDecoration(
-  //         hintText: "Search character...",
-  //         prefixIcon: const Icon(Icons.search),
-  //         filled: true,
-  //         fillColor: Colors.white,
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(30),
-  //           borderSide: BorderSide.none,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-  Widget _buildSearchBar(UserProvider userProvider) {
+  // Вспомогательный виджет для красивых заголовков секций
+  Widget _buildSectionTitle(String title, String emoji) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _filterCharacters,
-        decoration: InputDecoration(
-          hintText: "Search character...",
-          prefixIcon: const Icon(Icons.search, color: Color(0xFF0077B6)),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide.none,
+      padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 12.0),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF03045E),
+            ),
           ),
+          const SizedBox(width: 8),
+          Text(emoji, style: const TextStyle(fontSize: 18)),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04), // Легкая тень
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: _filterCharacters,
+          decoration: InputDecoration(
+            hintText: "Search character...",
+            hintStyle: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.w500),
+            prefixIcon: const Icon(Icons.search, color: Color(0xFF9D4EDD)), // Фиолетовый акцент
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16), // Чуть выше
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24), // Скругление 24
+              borderSide: BorderSide.none,
+            ),
+          ),
         ),
       ),
     );
@@ -147,9 +183,13 @@ class _HomePageState extends State<HomePage>
     return SizedBox(
       height: 280,
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+        child: CircularProgressIndicator(color: Color(0xFF00F5D4)),
+      )
           : ListView.builder(
+        physics: const BouncingScrollPhysics(), // Пружинка
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12), // Отступы по краям
         itemCount: _filteredCharacters.length,
         itemBuilder: (context, index) {
           return CharacterInfoCard(char: _filteredCharacters[index]);
@@ -162,7 +202,9 @@ class _HomePageState extends State<HomePage>
     return SizedBox(
       height: 100,
       child: ListView.builder(
+        physics: const BouncingScrollPhysics(), // Пружинка
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: cartoonList.length,
         itemBuilder: (context, index) {
           final cartoonModel = cartoonList[index];
@@ -173,17 +215,28 @@ class _HomePageState extends State<HomePage>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        ShowCartoonPage(btnCartoonModel: cartoonModel),
+                    builder: (context) => ShowCartoonPage(btnCartoonModel: cartoonModel),
                   ),
                 );
               },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  cartoonModel.image,
-                  width: 180,
-                  fit: BoxFit.cover,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.asset(
+                    cartoonModel.image,
+                    width: 180,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -193,61 +246,25 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // Widget _buildEarnCard() {
-  //   return Container(
-  //     margin: const EdgeInsets.all(16),
-  //     padding: const EdgeInsets.all(12),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(24),
-  //       boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         SizedBox(
-  //           width: 100,
-  //           height: 100,
-  //           child: Lottie.asset('assets/lottie/turn_coin.json'),
-  //         ),
-  //         const SizedBox(width: 16),
-  //         const Expanded(
-  //           child: Text(
-  //             "If you have not account \nfor earning rickkoins, \nyou can do it now!\nRead Uses Condition",
-  //             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-  //           ),
-  //         ),
-  //         GestureDetector(
-  //           onTap: () {
-  //             if (currentUser == null) {
-  //               Navigator.pushNamed(context, '/offerta');
-  //             } else {
-  //               ScaffoldMessenger.of(context).showSnackBar(
-  //                 const SnackBar(
-  //                   content: Text("You already \nhave an account!"),
-  //                 ),
-  //               );
-  //             }
-  //           },
-  //           child: const Icon(Icons.arrow_forward_ios, size: 16),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildEarnCard() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
+        // Яркий бирюзово-синий градиент (как на кнопке Trade)
         gradient: const LinearGradient(
-          colors: [Color(0xFF56CCF2), Color(0xFF0077B6)],
+          colors: [Color(0xFF00F5D4), Color(0xFF0077B6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF0077B6).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+          // Цветное свечение под карточкой
+          BoxShadow(
+            color: const Color(0xFF00B4D8).withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: Row(
@@ -265,7 +282,12 @@ class _HomePageState extends State<HomePage>
           const Expanded(
             child: Text(
               "Earn Rick Coins now!\nRead user conditions.",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white, height: 1.3),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Colors.white,
+                height: 1.3,
+              ),
             ),
           ),
           GestureDetector(
@@ -279,12 +301,12 @@ class _HomePageState extends State<HomePage>
               }
             },
             child: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF0077B6)),
+              child: const Icon(Icons.arrow_forward_ios, size: 18, color: Color(0xFF0077B6)),
             ),
           ),
         ],
@@ -292,4 +314,3 @@ class _HomePageState extends State<HomePage>
     );
   }
 }
-

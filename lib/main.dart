@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rick_coins_market_ruhsari/states/local_user_provider.dart';
+import 'package:rick_coins_market_ruhsari/providers/local_user_provider.dart';
 
 import 'app_navigation.dart';
 import 'firebase_options.dart';
@@ -22,22 +22,6 @@ Future<void> main() async {
   );
 }
 
-
-
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Rikki Morty Ruhsari',
-//       debugShowCheckedModeBanner: false,
-//       initialRoute: AppNavigation.home,
-//       onGenerateRoute: AppNavigation.generateRoute,
-//     );
-//   }
-// }
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -54,7 +38,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      initialRoute: AppNavigation.home,
+      initialRoute: AppNavigation.splash,
       onGenerateRoute: AppNavigation.generateRoute,
     );
   }

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:rick_coins_market_ruhsari/app_navigation.dart';
 import 'package:rick_coins_market_ruhsari/states/main_screen_state.dart';
 import 'package:rick_coins_market_ruhsari/ui/sign_in_sign_up/registration_page.dart';
 
@@ -25,8 +26,11 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => MainScreen()));
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppNavigation.home,
+                (route) => false);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error during login: ${e.toString()}")));
